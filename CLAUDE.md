@@ -4,11 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project status
 
-Smoothee is in **early development**. Phase 1 (Foundation) is scaffolded: a Rust
-binary crate with the module layout from the spec, and the first command,
-`smoothee status`, is implemented and tested. The remaining MVP commands
-(`sync`, `resolve`, `undo`, `pr`) are declared in the CLI surface and report the
-roadmap phase that will deliver them.
+Smoothee is in **early development**. Phase 1 (Foundation) and Phase 2 (Safe
+synchronization) are implemented and tested. `smoothee status` explains
+repository state; `smoothee sync` safely updates the current branch (fetch,
+merge-vs-rebase recommendation, restore point, journaled operation, conflict and
+verification handling); and `smoothee undo` reverses the last managed operation,
+recovering even from an in-progress rebase/merge. The remaining MVP commands
+(`resolve`, `pr`) are declared in the CLI surface and report the roadmap phase
+that will deliver them.
 
 `PROJECT_SUMMARY.md` remains the source of truth for scope, commands,
 architecture, module layout, and the phased roadmap — read it before extending
@@ -31,15 +34,21 @@ Requires a stable Rust toolchain (1.80+) and a `git` binary on `PATH`.
 
 - `git/` — the deterministic Git layer: `command.rs` (the structured runner over
   the `git` binary, the single choke point that also renders commands for the
-  "preserve access to Git" principle), `repository.rs` (discovery),
-  `status.rs` (porcelain v2 parsing), `branches.rs` (base-branch detection,
-  divergence).
+  "preserve access to Git" principle), `repository.rs` (discovery, HEAD/branch
+  and in-progress-operation queries), `status.rs` (porcelain v2 parsing),
+  `branches.rs` (base-branch detection, divergence), `restore.rs` (restore
+  points as real Git refs under `refs/smoothee/restore/`).
 - `config/` — `.smoothee.toml` (`repository.rs`) and global paths (`global.rs`).
-- `operations/journal.rs` — append-only JSON-lines operation journal under
-  `.git/smoothee/`; foundation for `undo` and crash recovery.
-- `ui/output.rs` — calm, themed terminal output helpers.
+- `operations/` — `journal.rs` (append-only JSON-lines operation journal under
+  `.git/smoothee/`), `sync.rs` (the merge-vs-rebase engine: plan → approve →
+  execute, restore points, journaling), `undo.rs` (reverse the last operation,
+  aborting any in-progress rebase/merge first).
+- `verification/` — runs project-defined `[verification]` checks after a sync
+  (advisory; never rolls back on its own).
+- `ui/` — `output.rs` (calm, themed terminal output) and `prompt.rs`
+  (confirmation gates; declines rather than guessing when non-interactive).
 - `cli/` — clap surface (`mod.rs`) and command implementations
-  (`commands/status.rs`).
+  (`commands/status.rs`, `sync.rs`, `undo.rs`).
 
 ## What Smoothee is
 

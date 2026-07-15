@@ -58,11 +58,50 @@ impl Repository {
 
     /// The repository's `.git` directory.
     ///
-    /// Used by Phase 2 to locate the operation journal (`<git_dir>/smoothee/`);
-    /// retained now so discovery captures it in one place.
-    #[allow(dead_code)]
+    /// Used to locate the operation journal (`<git_dir>/smoothee/`) and to
+    /// detect in-progress rebases/merges by their marker files.
     pub fn git_dir(&self) -> &Path {
         &self.git_dir
+    }
+
+    /// The commit `HEAD` currently points at, as a full SHA.
+    pub fn head(&self) -> Result<String, GitError> {
+        self.git("rev-parse").arg("HEAD").output()
+    }
+
+    /// The current branch name, or `None` in detached HEAD.
+    pub fn current_branch(&self) -> Result<Option<String>, GitError> {
+        let name = self
+            .git("symbolic-ref")
+            .arg("--quiet")
+            .arg("--short")
+            .arg("HEAD");
+        match name.run()? {
+            out if out.success => Ok(Some(out.stdout)),
+            _ => Ok(None),
+        }
+    }
+
+    /// Whether a rebase is currently in progress. Detected by the presence of
+    /// Git's own state directories rather than by parsing output, so it agrees
+    /// exactly with what `git rebase --continue`/`--abort` would act on.
+    pub fn rebase_in_progress(&self) -> bool {
+        self.git_dir.join("rebase-merge").exists() || self.git_dir.join("rebase-apply").exists()
+    }
+
+    /// Whether a merge is currently in progress (a recorded `MERGE_HEAD`).
+    pub fn merge_in_progress(&self) -> bool {
+        self.git_dir.join("MERGE_HEAD").exists()
+    }
+
+    /// Paths of files with unresolved merge conflicts (`--diff-filter=U`).
+    pub fn conflicted_files(&self) -> Result<Vec<String>, GitError> {
+        let out = self
+            .git("diff")
+            .arg("--name-only")
+            .arg("--diff-filter=U")
+            .output()?;
+        Ok(out.lines().map(str::to_string).collect())
     }
 
     /// A short, human-friendly name for the repository (its directory name).
@@ -131,5 +170,55 @@ pub(crate) mod tests {
     fn discovery_fails_outside_a_repository() {
         let dir = tempfile::TempDir::new().unwrap();
         assert!(Repository::discover(dir.path()).is_err());
+    }
+
+    fn commit(path: &Path, msg: &str) {
+        std::fs::write(path.join("f.txt"), msg).unwrap();
+        run(path, &["add", "."]);
+        run(path, &["commit", "-q", "-m", msg]);
+    }
+
+    #[test]
+    fn head_and_current_branch_reflect_state() {
+        let (_g, path) = init_repo();
+        commit(&path, "one");
+        let repo = Repository::discover(&path).unwrap();
+
+        assert_eq!(repo.current_branch().unwrap().as_deref(), Some("main"));
+        let head = repo.head().unwrap();
+        assert_eq!(head.len(), 40, "full SHA expected");
+
+        // Detached HEAD reports no branch.
+        run(&path, &["checkout", "-q", "--detach"]);
+        assert_eq!(repo.current_branch().unwrap(), None);
+    }
+
+    #[test]
+    fn detects_conflicts_and_merge_in_progress() {
+        let (_g, path) = init_repo();
+        // Base commit both branches share.
+        commit(&path, "shared");
+        run(&path, &["checkout", "-q", "-b", "feature"]);
+        std::fs::write(path.join("f.txt"), "feature side").unwrap();
+        run(&path, &["commit", "-q", "-am", "feature change"]);
+        run(&path, &["checkout", "-q", "main"]);
+        std::fs::write(path.join("f.txt"), "main side").unwrap();
+        run(&path, &["commit", "-q", "-am", "main change"]);
+
+        let repo = Repository::discover(&path).unwrap();
+        assert!(!repo.merge_in_progress());
+        assert!(repo.conflicted_files().unwrap().is_empty());
+
+        // Merging the divergent branch conflicts on f.txt. Silence Git's own
+        // conflict chatter so it doesn't pollute the test runner's output.
+        let out = std::process::Command::new("git")
+            .args(["merge", "--no-edit", "feature"])
+            .current_dir(&path)
+            .output()
+            .unwrap();
+        assert!(!out.status.success(), "merge should stop on conflict");
+
+        assert!(repo.merge_in_progress());
+        assert_eq!(repo.conflicted_files().unwrap(), vec!["f.txt".to_string()]);
     }
 }

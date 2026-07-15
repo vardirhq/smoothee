@@ -68,6 +68,11 @@ pub struct OperationRecord {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub after: Option<AfterState>,
     pub status: OperationStatus,
+    /// For `undo` records, the id of the operation this one reverses. Lets the
+    /// journal stay append-only: undoing an operation appends an `undo` record
+    /// rather than rewriting the original line.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub undoes: Option<String>,
 }
 
 impl OperationRecord {
@@ -87,6 +92,30 @@ impl OperationRecord {
             before,
             after: None,
             status: OperationStatus::Started,
+            undoes: None,
+        }
+    }
+
+    /// Build a completed `undo` record that reverses `target`.
+    ///
+    /// `undo_from` is the HEAD the branch was at before the restore; the
+    /// resulting HEAD is `target`'s pre-operation HEAD, which `undo` returns to.
+    pub fn undo(target: &OperationRecord, undo_from: impl Into<String>) -> Self {
+        Self {
+            id: next_id(),
+            kind: "undo".to_string(),
+            repository: target.repository.clone(),
+            branch: target.branch.clone(),
+            started_at: Utc::now(),
+            before: BeforeState {
+                head: undo_from.into(),
+                restore_ref: None,
+            },
+            after: Some(AfterState {
+                head: target.before.head.clone(),
+            }),
+            status: OperationStatus::Completed,
+            undoes: Some(target.id.clone()),
         }
     }
 
@@ -134,6 +163,7 @@ impl Journal {
     }
 
     /// The on-disk path of the journal file.
+    #[allow(dead_code)] // Surfaced by `doctor`/diagnostics in a later phase.
     pub fn path(&self) -> &Path {
         &self.path
     }
@@ -188,8 +218,32 @@ impl Journal {
     }
 
     /// The most recently appended record, if any.
+    #[allow(dead_code)] // Raw tail accessor; `operations()` is what commands use.
     pub fn latest(&self) -> Result<Option<OperationRecord>, JournalError> {
         Ok(self.read_all()?.pop())
+    }
+
+    /// The journal folded to one record per operation id — the latest state of
+    /// each — in the chronological order the operations first appeared.
+    ///
+    /// A mutating operation appends a `Started` line before it runs and a
+    /// `Completed`/`Failed` line after; folding presents the final outcome
+    /// while preserving operation ordering for `undo`.
+    pub fn operations(&self) -> Result<Vec<OperationRecord>, JournalError> {
+        let records = self.read_all()?;
+        let mut order: Vec<String> = Vec::new();
+        let mut latest: std::collections::HashMap<String, OperationRecord> =
+            std::collections::HashMap::new();
+        for record in records {
+            if !latest.contains_key(&record.id) {
+                order.push(record.id.clone());
+            }
+            latest.insert(record.id.clone(), record);
+        }
+        Ok(order
+            .into_iter()
+            .filter_map(|id| latest.remove(&id))
+            .collect())
     }
 }
 
@@ -267,6 +321,33 @@ mod tests {
         let b = next_id();
         assert_ne!(a, b);
         assert!(a < b, "ids should sort chronologically: {a} < {b}");
+    }
+
+    #[test]
+    fn operations_folds_started_then_completed_to_one() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let journal = Journal::for_git_dir(dir.path());
+
+        let started = sample("sync_rebase");
+        let id = started.id.clone();
+        journal.append(&started).unwrap();
+        journal.append(&started.clone().complete("def456")).unwrap();
+
+        let ops = journal.operations().unwrap();
+        assert_eq!(ops.len(), 1, "two lines for one id fold to one operation");
+        assert_eq!(ops[0].id, id);
+        assert_eq!(ops[0].status, OperationStatus::Completed);
+    }
+
+    #[test]
+    fn undo_record_references_its_target() {
+        let target = sample("sync_rebase").complete("def456");
+        let undo = OperationRecord::undo(&target, "def456");
+        assert_eq!(undo.kind, "undo");
+        assert_eq!(undo.undoes.as_deref(), Some(target.id.as_str()));
+        assert_eq!(undo.before.head, "def456");
+        // Undo returns to the target's pre-operation HEAD.
+        assert_eq!(undo.after.unwrap().head, target.before.head);
     }
 
     #[test]

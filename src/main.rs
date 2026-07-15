@@ -8,6 +8,7 @@ mod config;
 mod git;
 mod operations;
 mod ui;
+mod verification;
 
 use std::process::ExitCode;
 

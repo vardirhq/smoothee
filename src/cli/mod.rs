@@ -25,11 +25,31 @@ pub enum Command {
     /// Explain repository state in plain language.
     Status,
     /// Safely update the current branch (fetch, restore point, merge/rebase).
-    Sync,
+    Sync {
+        /// Force a rebase, overriding configuration and auto-detection.
+        #[arg(long, conflicts_with = "merge")]
+        rebase: bool,
+        /// Force a merge, overriding configuration and auto-detection.
+        #[arg(long)]
+        merge: bool,
+        /// Show the plan without making any changes.
+        #[arg(long)]
+        dry_run: bool,
+        /// Skip the configured verification checks after syncing.
+        #[arg(long)]
+        no_verify: bool,
+        /// Proceed without the confirmation prompt (for automation).
+        #[arg(short = 'y', long)]
+        yes: bool,
+    },
     /// Guided merge-conflict resolution.
     Resolve,
     /// Reverse the last Smoothee-managed operation.
-    Undo,
+    Undo {
+        /// Proceed without the confirmation prompt (for automation).
+        #[arg(short = 'y', long)]
+        yes: bool,
+    },
     /// Create a GitHub pull request from the current branch.
     Pr,
 }
@@ -39,11 +59,23 @@ impl Cli {
     pub fn run(self) -> Result<()> {
         match self.command {
             Command::Status => commands::status::run(),
-            Command::Sync => commands::not_yet_implemented("sync", "Phase 2: Safe synchronization"),
+            Command::Sync {
+                rebase,
+                merge,
+                dry_run,
+                no_verify,
+                yes,
+            } => commands::sync::run(commands::sync::SyncArgs {
+                rebase,
+                merge,
+                dry_run,
+                no_verify,
+                yes,
+            }),
             Command::Resolve => {
                 commands::not_yet_implemented("resolve", "Phase 3: Conflict workflow")
             }
-            Command::Undo => commands::not_yet_implemented("undo", "Phase 2: Safe synchronization"),
+            Command::Undo { yes } => commands::undo::run(commands::undo::UndoArgs { yes }),
             Command::Pr => commands::not_yet_implemented("pr", "Phase 4: GitHub workflow"),
         }
     }

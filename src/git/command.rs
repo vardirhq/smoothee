@@ -40,6 +40,21 @@ pub enum GitError {
     NotUtf8 { command: String },
 }
 
+/// The captured outcome of a [`GitCommand::run`] invocation, including a
+/// non-zero exit that the caller wants to inspect rather than treat as an error.
+#[derive(Debug, Clone)]
+pub struct GitOutput {
+    /// Whether the process exited with status zero.
+    pub success: bool,
+    /// The exit code (`-1` if the process was terminated by a signal).
+    #[allow(dead_code)] // Surfaced for callers that need to branch on exit codes.
+    pub code: i32,
+    /// Captured stdout, trailing newlines trimmed.
+    pub stdout: String,
+    /// Captured stderr, trailing whitespace trimmed.
+    pub stderr: String,
+}
+
 /// A fully-formed `git` invocation, ready to run and cheap to describe.
 ///
 /// Construct with [`GitCommand::new`] and chain [`GitCommand::arg`] /
@@ -134,6 +149,32 @@ impl GitCommand {
         Ok(stdout.trim_end_matches('\n').to_string())
     }
 
+    /// Run the command, capturing its outcome *without* treating a non-zero
+    /// exit as an error.
+    ///
+    /// Mutating commands such as `rebase` and `merge` signal "stopped for
+    /// conflicts" through a non-zero status that is a normal, expected outcome
+    /// rather than a failure to surface. Callers inspect [`GitOutput::success`]
+    /// and the captured streams to decide what happened next.
+    pub fn run(&self) -> Result<GitOutput, GitError> {
+        let display = self.display();
+        let output = self.build().output().map_err(|source| GitError::Spawn {
+            command: display.clone(),
+            source,
+        })?;
+
+        Ok(GitOutput {
+            success: output.status.success(),
+            code: output.status.code().unwrap_or(-1),
+            stdout: String::from_utf8_lossy(&output.stdout)
+                .trim_end_matches('\n')
+                .to_string(),
+            stderr: String::from_utf8_lossy(&output.stderr)
+                .trim_end()
+                .to_string(),
+        })
+    }
+
     /// Run the command and report whether it exited successfully, without
     /// treating a non-zero status as an error. Useful for predicate-style
     /// checks such as "do these two refs share history?".
@@ -187,5 +228,22 @@ mod tests {
     #[test]
     fn succeeds_reports_exit_status() {
         assert!(GitCommand::new("--version").succeeds().unwrap());
+    }
+
+    #[test]
+    fn run_captures_success_and_stdout() {
+        let out = GitCommand::new("--version").run().unwrap();
+        assert!(out.success);
+        assert_eq!(out.code, 0);
+        assert!(out.stdout.starts_with("git version"));
+    }
+
+    #[test]
+    fn run_reports_failure_without_erroring() {
+        // A bogus subcommand exits non-zero; `run` must surface that as data,
+        // not as a `GitError`.
+        let out = GitCommand::new("not-a-real-subcommand").run().unwrap();
+        assert!(!out.success);
+        assert_ne!(out.code, 0);
     }
 }

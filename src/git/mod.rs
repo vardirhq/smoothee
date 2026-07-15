@@ -7,6 +7,7 @@
 pub mod branches;
 pub mod command;
 pub mod repository;
+pub mod restore;
 pub mod status;
 
 pub use repository::Repository;

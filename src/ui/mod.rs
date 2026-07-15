@@ -1,3 +1,4 @@
-//! Terminal UI: output styling and (in later phases) interactive prompts.
+//! Terminal UI: output styling and interactive prompts.
 
 pub mod output;
+pub mod prompt;

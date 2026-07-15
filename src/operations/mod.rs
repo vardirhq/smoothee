@@ -1,11 +1,10 @@
-//! Operation journaling and (in later phases) undo/plan machinery.
+//! Operation journaling and the mutating-operation engines built on it.
 //!
 //! Every mutation Smoothee performs is journaled here so it can be reversed and
-//! diagnosed. Phase 1 establishes the journal; `undo` and `plan` build on it.
-//!
-//! The journal API is fully implemented and unit-tested now so that Phase 2's
-//! `sync` (the first mutating command) can record operations on day one. It is
-//! deliberately not yet called from any command, hence the allow below.
-#![allow(dead_code)]
+//! diagnosed. [`journal`] is the append-only record; [`sync`] and [`undo`] are
+//! the Phase 2 engines that create restore points, journal their work, and
+//! recover from it.
 
 pub mod journal;
+pub mod sync;
+pub mod undo;

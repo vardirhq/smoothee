@@ -4,19 +4,42 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project status
 
-Smoothee is **pre-implementation**. The repository currently contains only a
-design specification (`PROJECT_SUMMARY.md`) and a stub `README.md`. There is no
-source code, build system, dependency manifest, tests, or CI yet.
+Smoothee is in **early development**. Phase 1 (Foundation) is scaffolded: a Rust
+binary crate with the module layout from the spec, and the first command,
+`smoothee status`, is implemented and tested. The remaining MVP commands
+(`sync`, `resolve`, `undo`, `pr`) are declared in the CLI surface and report the
+roadmap phase that will deliver them.
 
-Before writing code, read `PROJECT_SUMMARY.md` in full — it is the source of
-truth for scope, commands, architecture, module layout, and the phased roadmap.
-This file summarizes the parts that constrain how code should be written; the
-spec has the detail.
+`PROJECT_SUMMARY.md` remains the source of truth for scope, commands,
+architecture, module layout, and the phased roadmap — read it before extending
+the code. This file summarizes the parts that constrain how code should be
+written; the spec has the detail.
 
-Because nothing is scaffolded, there are no build/lint/test commands to document
-yet. When the first Rust crate is created, update this section with the real
-`cargo` invocations (e.g. `cargo build`, `cargo test`, `cargo test <name>` to
-run a single test, `cargo clippy`, `cargo fmt`).
+### Build / test / lint commands
+
+Requires a stable Rust toolchain (1.80+) and a `git` binary on `PATH`.
+
+- `cargo build` — debug build (`target/debug/smoothee`)
+- `cargo build --release` — optimized single executable
+- `cargo run -- status` — build and run a subcommand
+- `cargo test` — run the full test suite
+- `cargo test <name>` — run a single test by name substring
+- `cargo clippy` — lints (kept warning-clean)
+- `cargo fmt` / `cargo fmt --check` — formatting
+
+### Module map (what lives where)
+
+- `git/` — the deterministic Git layer: `command.rs` (the structured runner over
+  the `git` binary, the single choke point that also renders commands for the
+  "preserve access to Git" principle), `repository.rs` (discovery),
+  `status.rs` (porcelain v2 parsing), `branches.rs` (base-branch detection,
+  divergence).
+- `config/` — `.smoothee.toml` (`repository.rs`) and global paths (`global.rs`).
+- `operations/journal.rs` — append-only JSON-lines operation journal under
+  `.git/smoothee/`; foundation for `undo` and crash recovery.
+- `ui/output.rs` — calm, themed terminal output helpers.
+- `cli/` — clap surface (`mod.rs`) and command implementations
+  (`commands/status.rs`).
 
 ## What Smoothee is
 

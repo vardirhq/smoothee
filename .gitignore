@@ -1,0 +1,9 @@
+# Rust build artifacts
+/target
+
+# Backtraces
+*.rs.bk
+
+# Local editor / OS cruft
+*.swp
+.DS_Store

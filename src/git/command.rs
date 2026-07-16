@@ -64,6 +64,7 @@ pub struct GitOutput {
 pub struct GitCommand {
     args: Vec<OsString>,
     cwd: Option<PathBuf>,
+    envs: Vec<(OsString, OsString)>,
 }
 
 impl GitCommand {
@@ -72,6 +73,7 @@ impl GitCommand {
         Self {
             args: vec![subcommand.as_ref().to_os_string()],
             cwd: None,
+            envs: Vec::new(),
         }
     }
 
@@ -100,6 +102,19 @@ impl GitCommand {
         self
     }
 
+    /// Set an environment variable for this invocation only.
+    ///
+    /// Used sparingly for behaviour that has no command-line switch — notably
+    /// `GIT_EDITOR` so `rebase --continue`/`commit` never block waiting on an
+    /// editor. It is deliberately *not* rendered by [`display`](Self::display):
+    /// the git operation shown to the user is the real one, and this only
+    /// suppresses an interactive editor that would otherwise stall automation.
+    pub fn env(mut self, key: impl AsRef<OsStr>, value: impl AsRef<OsStr>) -> Self {
+        self.envs
+            .push((key.as_ref().to_os_string(), value.as_ref().to_os_string()));
+        self
+    }
+
     /// Render the command the way a user would type it, for display and for
     /// the "Running:" transparency output Smoothee shows before mutating a repo.
     pub fn display(&self) -> String {
@@ -121,6 +136,9 @@ impl GitCommand {
         cmd.args(&self.args);
         if let Some(cwd) = &self.cwd {
             cmd.current_dir(cwd);
+        }
+        for (key, value) in &self.envs {
+            cmd.env(key, value);
         }
         cmd
     }

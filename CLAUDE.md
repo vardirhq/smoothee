@@ -4,14 +4,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project status
 
-Smoothee is in **early development**. Phase 1 (Foundation) and Phase 2 (Safe
-synchronization) are implemented and tested. `smoothee status` explains
-repository state; `smoothee sync` safely updates the current branch (fetch,
-merge-vs-rebase recommendation, restore point, journaled operation, conflict and
-verification handling); and `smoothee undo` reverses the last managed operation,
-recovering even from an in-progress rebase/merge. The remaining MVP commands
-(`resolve`, `pr`) are declared in the CLI surface and report the roadmap phase
-that will deliver them.
+Smoothee is in **early development**. Phase 1 (Foundation), Phase 2 (Safe
+synchronization), and Phase 3 (Conflict workflow) are implemented and tested.
+`smoothee status` explains repository state; `smoothee sync` safely updates the
+current branch (fetch, merge-vs-rebase recommendation, restore point, journaled
+operation, conflict and verification handling); `smoothee resolve` guides
+merge/rebase conflict resolution (intent-labelled hunks, keep-a-side / edit /
+skip, marker validation, restore point + journal, reversible finish); and
+`smoothee undo` reverses the last managed operation, recovering even from an
+in-progress rebase/merge. The remaining MVP command (`pr`) is declared in the
+CLI surface and reports the roadmap phase that will deliver it. AI-assisted
+conflict proposals (the `ai/` layer) are not built yet — the fully local,
+no-AI resolution path is what ships today.
 
 `PROJECT_SUMMARY.md` remains the source of truth for scope, commands,
 architecture, module layout, and the phased roadmap — read it before extending
@@ -37,18 +41,24 @@ Requires a stable Rust toolchain (1.80+) and a `git` binary on `PATH`.
   "preserve access to Git" principle), `repository.rs` (discovery, HEAD/branch
   and in-progress-operation queries), `status.rs` (porcelain v2 parsing),
   `branches.rs` (base-branch detection, divergence), `restore.rs` (restore
-  points as real Git refs under `refs/smoothee/restore/`).
+  points as real Git refs under `refs/smoothee/restore/`), `conflicts.rs`
+  (parsing conflicted files into intent-labelled ours/base/theirs hunks and
+  applying whole-side resolutions).
 - `config/` — `.smoothee.toml` (`repository.rs`) and global paths (`global.rs`).
 - `operations/` — `journal.rs` (append-only JSON-lines operation journal under
   `.git/smoothee/`), `sync.rs` (the merge-vs-rebase engine: plan → approve →
-  execute, restore points, journaling), `undo.rs` (reverse the last operation,
-  aborting any in-progress rebase/merge first).
-- `verification/` — runs project-defined `[verification]` checks after a sync
-  (advisory; never rolls back on its own).
+  execute, restore points, journaling), `resolve.rs` (guided conflict
+  resolution: restore point + journal, keep-a-side / validate-an-edit, reversible
+  finish of the merge/rebase), `undo.rs` (reverse the last operation, aborting
+  any in-progress rebase/merge first).
+- `verification/` — `mod.rs` runs project-defined `[verification]` checks after a
+  sync (advisory; never rolls back on its own); `conflict_markers.rs` refuses to
+  stage a file that still contains conflict markers.
 - `ui/` — `output.rs` (calm, themed terminal output) and `prompt.rs`
-  (confirmation gates; declines rather than guessing when non-interactive).
+  (confirmation gates and the `resolve` action menu; declines rather than
+  guessing when non-interactive).
 - `cli/` — clap surface (`mod.rs`) and command implementations
-  (`commands/status.rs`, `sync.rs`, `undo.rs`).
+  (`commands/status.rs`, `sync.rs`, `resolve.rs`, `undo.rs`).
 
 ## What Smoothee is
 

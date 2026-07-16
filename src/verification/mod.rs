@@ -8,6 +8,8 @@
 //! its own. It tells the user their tree needs attention and that `smoothee
 //! undo` is available — the human decides.
 
+pub mod conflict_markers;
+
 use std::process::Command;
 
 use crate::config::repository::VerificationConfig;

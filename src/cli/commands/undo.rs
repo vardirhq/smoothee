@@ -85,6 +85,8 @@ fn describe(kind: &str, branch: &str) -> String {
     match kind {
         "sync_rebase" => format!("Synced {branch} using rebase"),
         "sync_merge" => format!("Synced {branch} using merge"),
+        "resolve_merge" => format!("Resolved conflicts on {branch} (merge)"),
+        "resolve_rebase" => format!("Resolved conflicts on {branch} (rebase)"),
         other => format!("{other} on {branch}"),
     }
 }
@@ -112,7 +114,11 @@ mod tests {
             describe("sync_merge", "feature"),
             "Synced feature using merge"
         );
-        assert_eq!(describe("resolve", "feature"), "resolve on feature");
+        assert_eq!(
+            describe("resolve_merge", "feature"),
+            "Resolved conflicts on feature (merge)"
+        );
+        assert_eq!(describe("other_op", "feature"), "other_op on feature");
     }
 
     #[test]

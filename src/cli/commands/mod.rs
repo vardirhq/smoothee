@@ -5,6 +5,7 @@
 //! the real product shape, and each reports its roadmap phase rather than
 //! pretending to work.
 
+pub mod resolve;
 pub mod status;
 pub mod sync;
 pub mod undo;
@@ -27,7 +28,7 @@ pub fn not_yet_implemented(command: &str, phase: &str) -> Result<()> {
     println!("  {}", output::label(&format!("Arriving in: {phase}")));
     println!(
         "  {}",
-        output::label("Today, `smoothee status`, `sync`, and `undo` are available.")
+        output::label("Today, `smoothee status`, `sync`, `resolve`, and `undo` are available.")
     );
     Ok(())
 }

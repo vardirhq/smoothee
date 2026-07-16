@@ -6,5 +6,6 @@
 //! recover from it.
 
 pub mod journal;
+pub mod resolve;
 pub mod sync;
 pub mod undo;

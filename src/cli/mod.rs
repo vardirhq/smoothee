@@ -72,9 +72,7 @@ impl Cli {
                 no_verify,
                 yes,
             }),
-            Command::Resolve => {
-                commands::not_yet_implemented("resolve", "Phase 3: Conflict workflow")
-            }
+            Command::Resolve => commands::resolve::run(),
             Command::Undo { yes } => commands::undo::run(commands::undo::UndoArgs { yes }),
             Command::Pr => commands::not_yet_implemented("pr", "Phase 4: GitHub workflow"),
         }

@@ -215,9 +215,7 @@ fn print_conflicted(
     println!("{}", output::label("Your options:"));
     println!(
         "{}",
-        output::bullet(
-            "Resolve them yourself, then finish with git (guided `smoothee resolve` is coming)"
-        )
+        output::bullet("`smoothee resolve` — guided, reversible conflict resolution")
     );
     println!(
         "{}",

@@ -1,5 +1,7 @@
 # Smoothee
 
+![Smoothee social preview](assets/smoothee-social-preview.png)
+
 Make Git smooth.
 
 Smoothee is a safer, clearer command-line workflow for Git and GitHub.
@@ -9,6 +11,17 @@ operations, guides merge-conflict resolution, and helps you recover
 when things go wrong.
 
 Instead of memorizing recovery commands:
+
+```text
+         o
+        /
+   .---/---.     ___                         _     _
+  (_________)   / __|  _ __    ___    ___   | |_  | |_    ___   ___
+   |~ ~ ~ ~|    \__ \ | '  \  / _ \  / _ \  |  _| | ' \  / -_) / -_)
+   | o     |    |___/ |_|_|_| \___/  \___/   \__| |_||_| \___| \___|
+    \  o  /
+     \___/        make git smooth.
+```
 
     smoothee status
     smoothee sync
@@ -79,6 +92,13 @@ roadmap.
 - Per-repository configuration via `.smoothee.toml`
 - An append-only operation journal (JSON lines under `.git/smoothee/`) that
   powers undo and future crash recovery
+
+## Brand assets
+
+- [`assets/smoothee-social-preview.png`](assets/smoothee-social-preview.png)
+  is the GitHub/social preview image.
+- [`assets/smoothee-banner.txt`](assets/smoothee-banner.txt) is the terminal
+  banner artwork for CLI output, release notes, or docs.
 
 ## Building and testing
 

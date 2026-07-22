@@ -10,9 +10,11 @@ when things go wrong.
 
 Instead of memorizing recovery commands:
 
+    smoothee status
     smoothee sync
     smoothee resolve
     smoothee undo
+    smoothee doctor
     smoothee pr
 
 Smoothee uses Git underneath and shows you the commands it runs.
@@ -20,8 +22,7 @@ You stay in control.
 
 ## Status
 
-Early development. Phase 1 (Foundation) is implemented and the first
-command, `smoothee status`, works today:
+Early development. The core safety workflow is taking shape:
 
 ```
 $ smoothee status
@@ -42,10 +43,25 @@ Recommended next step:
   smoothee sync
 ```
 
-The remaining MVP commands (`sync`, `resolve`, `undo`, `pr`) are declared
-in the CLI and report the roadmap phase that delivers them. See
-[`PROJECT_SUMMARY.md`](PROJECT_SUMMARY.md) for the full design and the
-phased roadmap.
+Implemented today:
+
+- `smoothee status` explains repository state and recommends one next step.
+- `smoothee sync` fetches the base branch, shows a merge/rebase plan, creates
+  a restore point, journals the operation, and stops safely on conflicts.
+- `smoothee resolve` walks through in-progress merge/rebase conflicts and
+  validates edited files before staging them.
+- `smoothee undo` reverses the latest Smoothee-managed operation when a restore
+  point is available.
+- `smoothee doctor` checks Git, GitHub CLI, repository, base-branch detection,
+  and Smoothee configuration.
+
+Still on the roadmap:
+
+- `smoothee pr` for the GitHub pull-request workflow.
+- richer commit workflow, history inspection, and AI-assisted explanations.
+
+See [`PROJECT_SUMMARY.md`](PROJECT_SUMMARY.md) for the full design and phased
+roadmap.
 
 ## What works today
 
@@ -54,9 +70,15 @@ phased roadmap.
   the real commands inspectable
 - Plain-language `status`: working-tree summary, base-branch detection,
   ahead/behind analysis, and a single recommended next step
+- Safe synchronization with explicit plans, restore points, operation
+  journaling, and conflict-aware stopping
+- Guided conflict resolution that refuses to stage files with leftover conflict
+  markers
+- Reversible operation history through `smoothee undo`
+- Read-only diagnostics through `smoothee doctor`
 - Per-repository configuration via `.smoothee.toml`
-- An append-only operation journal (JSON lines under `.git/smoothee/`)
-  that will power `undo` and crash recovery
+- An append-only operation journal (JSON lines under `.git/smoothee/`) that
+  powers undo and future crash recovery
 
 ## Building and testing
 
@@ -67,6 +89,7 @@ toolchain (1.80+) and a `git` binary on `PATH`.
 cargo build              # debug build → target/debug/smoothee
 cargo build --release    # optimized single executable
 cargo run -- status      # build and run the status command
+cargo run -- doctor      # inspect your Git/GitHub/Smoothee setup
 cargo test               # run the full test suite
 cargo test <name>        # run a single test by name substring
 cargo clippy             # lints

@@ -50,6 +50,8 @@ pub enum Command {
         #[arg(short = 'y', long)]
         yes: bool,
     },
+    /// Check Git, GitHub CLI, repository, and Smoothee configuration.
+    Doctor,
     /// Create a GitHub pull request from the current branch.
     Pr,
 }
@@ -74,6 +76,7 @@ impl Cli {
             }),
             Command::Resolve => commands::resolve::run(),
             Command::Undo { yes } => commands::undo::run(commands::undo::UndoArgs { yes }),
+            Command::Doctor => commands::doctor::run(),
             Command::Pr => commands::not_yet_implemented("pr", "Phase 4: GitHub workflow"),
         }
     }

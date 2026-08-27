@@ -39,7 +39,9 @@ pub enum RecoveryError {
     NoRestorePoint(String),
     #[error("the restore point for operation {0} no longer exists")]
     MissingRestorePoint(String),
-    #[error("recovery only works on the operation's branch ({expected}); current branch is {actual}")]
+    #[error(
+        "recovery only works on the operation's branch ({expected}); current branch is {actual}"
+    )]
     WrongBranch { expected: String, actual: String },
     #[error("recovery requires a clean working tree; commit or stash your changes first")]
     DirtyWorkingTree,

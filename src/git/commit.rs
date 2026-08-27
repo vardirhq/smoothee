@@ -143,9 +143,8 @@ mod tests {
 
     #[test]
     fn groups_unstaged_paths_by_top_level_scope() {
-        let groups = group_paths(
-            ["src/a.rs", "src/b.rs", "docs/guide.md", "README.md"].into_iter(),
-        );
+        let groups =
+            group_paths(["src/a.rs", "src/b.rs", "docs/guide.md", "README.md"].into_iter());
         assert_eq!(groups.len(), 3);
         assert_eq!(groups[0].scope, "docs");
         assert_eq!(groups[1].scope, "root");

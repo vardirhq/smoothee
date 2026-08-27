@@ -15,13 +15,20 @@ pub struct HistoryArgs {
 }
 
 pub fn run(args: HistoryArgs) -> Result<()> {
+    if args.limit == 0 {
+        anyhow::bail!("--limit must be at least 1");
+    }
+
     let repo = Repository::discover_from_cwd()
         .context("this does not look like a Git repository (or git is not installed)")?;
     let journal = Journal::for_git_dir(repo.git_dir());
     let operations = journal.operations().context("reading Smoothee history")?;
 
     if operations.is_empty() {
-        println!("{}", output::label("No Smoothee-managed operations recorded for this repository."));
+        println!(
+            "{}",
+            output::label("No Smoothee-managed operations recorded for this repository.")
+        );
         return Ok(());
     }
 
@@ -36,19 +43,38 @@ pub fn run(args: HistoryArgs) -> Result<()> {
     Ok(())
 }
 
-fn render_record(repo: &Repository, record: &OperationRecord, undo_target: Option<&str>) -> Result<()> {
+fn render_record(
+    repo: &Repository,
+    record: &OperationRecord,
+    undo_target: Option<&str>,
+) -> Result<()> {
     let time = local_time(record.started_at);
-    println!("{}", output::heading(&format!("{time}  {}", kind_label(&record.kind))));
-    println!("{}", output::bullet(&format!("Status: {}", status_label(record.status))));
+    println!(
+        "{}",
+        output::heading(&format!("{time}  {}", kind_label(&record.kind)))
+    );
+    println!(
+        "{}",
+        output::bullet(&format!("Status: {}", status_label(record.status)))
+    );
     println!("{}", output::bullet(&format!("Branch: {}", record.branch)));
-    println!("{}", output::bullet(&format!("Before: {}", short_sha(&record.before.head))));
+    println!(
+        "{}",
+        output::bullet(&format!("Before: {}", short_sha(&record.before.head)))
+    );
 
     if let Some(after) = &record.after {
-        println!("{}", output::bullet(&format!("After: {}", short_sha(&after.head))));
+        println!(
+            "{}",
+            output::bullet(&format!("After: {}", short_sha(&after.head)))
+        );
     }
 
     if let Some(target) = &record.undoes {
-        println!("{}", output::bullet(&format!("Undid: {}", short_id(target))));
+        println!(
+            "{}",
+            output::bullet(&format!("Undid: {}", short_id(target)))
+        );
     }
 
     if let Some(restore_ref) = &record.before.restore_ref {
@@ -75,7 +101,9 @@ fn render_record(repo: &Repository, record: &OperationRecord, undo_target: Optio
 }
 
 fn local_time(time: DateTime<Utc>) -> String {
-    time.with_timezone(&Local).format("%Y-%m-%d %H:%M").to_string()
+    time.with_timezone(&Local)
+        .format("%Y-%m-%d %H:%M")
+        .to_string()
 }
 
 fn kind_label(kind: &str) -> String {

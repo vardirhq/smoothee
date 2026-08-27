@@ -38,19 +38,19 @@ jobs:
         run: cargo build --release
 
   msrv:
-    name: Rust 1.80 compatibility
+    name: Rust 1.85 compatibility
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Install Rust 1.80
-        uses: dtolnay/rust-toolchain@1.80.0
+      - name: Install Rust 1.85
+        uses: dtolnay/rust-toolchain@1.85.0
 
       - name: Cache Rust build
         uses: Swatinem/rust-cache@v2
         with:
-          key: msrv-1.80
+          key: msrv-1.85
 
       - name: Check MSRV
         run: cargo check --all-targets --all-features

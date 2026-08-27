@@ -185,10 +185,7 @@ fn print_changes(plan: &CommitPlan) {
         } else {
             "unstaged"
         };
-        println!(
-            "{}",
-            output::bullet(&format!("{} ({state})", change.path))
-        );
+        println!("{}", output::bullet(&format!("{} ({state})", change.path)));
     }
 
     if !plan.has_staged() && plan.groups.len() > 1 {

@@ -109,10 +109,8 @@ impl WorkingTreeStatus {
                     .unwrap_or(0);
                 self.ahead_behind = Some(AheadBehind { ahead, behind });
             }
-            Some("branch.oid") => {
-                if fields.next() == Some("(initial)") {
-                    self.is_initial = true;
-                }
+            Some("branch.oid") if fields.next() == Some("(initial)") => {
+                self.is_initial = true;
             }
             _ => {}
         }
@@ -172,7 +170,6 @@ mod tests {
 ? new_file.rs
 ";
         let s = WorkingTreeStatus::parse(raw);
-        // staged_only + both => 2 staged; worktree_only + both => 2 modified.
         assert_eq!(s.staged, 2);
         assert_eq!(s.modified, 2);
         assert_eq!(s.untracked, 1);

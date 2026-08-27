@@ -34,19 +34,14 @@ pub enum Command {
     Resolve,
     /// Create an intentional commit from staged changes or one logical change group.
     Commit {
-        /// Commit message. When omitted, Smoothee proposes one from the selected scope.
         #[arg(short = 'm', long)]
         message: Option<String>,
-        /// Deliberately stage every current change before committing.
         #[arg(short = 'a', long, conflicts_with = "group")]
         all: bool,
-        /// Stage only logical group N from the analysis output.
         #[arg(long, value_name = "N", conflicts_with = "all")]
         group: Option<usize>,
-        /// Show analysis and Git commands without staging or committing.
         #[arg(long)]
         dry_run: bool,
-        /// Proceed without the confirmation prompt (for automation).
         #[arg(short = 'y', long)]
         yes: bool,
     },
@@ -57,8 +52,27 @@ pub enum Command {
     },
     /// Check Git, GitHub CLI, repository, and Smoothee configuration.
     Doctor,
-    /// Create a GitHub pull request from the current branch.
-    Pr,
+    /// Inspect and create a GitHub pull request from the current branch.
+    Pr {
+        /// Override the proposed pull-request title.
+        #[arg(long)]
+        title: Option<String>,
+        /// Override the generated pull-request body.
+        #[arg(long)]
+        body: Option<String>,
+        /// Create the pull request as a draft.
+        #[arg(long)]
+        draft: bool,
+        /// Deliberately publish/update the current branch on origin first.
+        #[arg(long)]
+        push: bool,
+        /// Show the plan and commands without pushing or creating anything.
+        #[arg(long)]
+        dry_run: bool,
+        /// Proceed without the confirmation prompt (for automation).
+        #[arg(short = 'y', long)]
+        yes: bool,
+    },
 }
 
 impl Cli {
@@ -94,7 +108,21 @@ impl Cli {
             }),
             Command::Undo { yes } => commands::undo::run(commands::undo::UndoArgs { yes }),
             Command::Doctor => commands::doctor::run(),
-            Command::Pr => commands::not_yet_implemented("pr", "Phase 4: GitHub workflow"),
+            Command::Pr {
+                title,
+                body,
+                draft,
+                push,
+                dry_run,
+                yes,
+            } => commands::pr::run(commands::pr::PrArgs {
+                title,
+                body,
+                draft,
+                push,
+                dry_run,
+                yes,
+            }),
         }
     }
 }

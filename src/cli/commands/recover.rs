@@ -21,15 +21,24 @@ pub fn run(args: RecoverArgs) -> Result<()> {
     let plan = recovery::plan(&repo, &journal, &args.operation).context("planning recovery")?;
 
     println!("{}", output::heading("Recovery plan"));
-    println!("{}", output::bullet(&format!("Operation: {}", plan.target.id)));
-    println!("{}", output::bullet(&format!("Branch: {}", plan.target.branch)));
+    println!(
+        "{}",
+        output::bullet(&format!("Operation: {}", plan.target.id))
+    );
+    println!(
+        "{}",
+        output::bullet(&format!("Branch: {}", plan.target.branch))
+    );
     println!(
         "{}",
         output::bullet(&format!("Current HEAD: {}", short_sha(&plan.current_head)))
     );
     println!(
         "{}",
-        output::bullet(&format!("Restore to: {}", short_sha(&plan.target.before.head)))
+        output::bullet(&format!(
+            "Restore to: {}",
+            short_sha(&plan.target.before.head)
+        ))
     );
     println!("{}", output::bullet("Working tree: clean"));
     println!();

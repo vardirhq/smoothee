@@ -112,6 +112,7 @@ fn kind_label(kind: &str) -> String {
         "sync_merge" => "sync (merge)".to_string(),
         "resolve_rebase" => "resolve (rebase)".to_string(),
         "resolve_merge" => "resolve (merge)".to_string(),
+        "recover" => "recovery".to_string(),
         "undo" => "undo".to_string(),
         other => other.replace('_', " "),
     }
@@ -142,6 +143,7 @@ mod tests {
     fn labels_known_operation_kinds() {
         assert_eq!(kind_label("sync_rebase"), "sync (rebase)");
         assert_eq!(kind_label("resolve_merge"), "resolve (merge)");
+        assert_eq!(kind_label("recover"), "recovery");
         assert_eq!(kind_label("future_kind"), "future kind");
     }
 

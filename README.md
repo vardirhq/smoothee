@@ -28,6 +28,7 @@ Instead of memorizing recovery commands:
     smoothee resolve
     smoothee commit
     smoothee history
+    smoothee recover <operation-id>
     smoothee undo
     smoothee doctor
     smoothee pr
@@ -71,6 +72,10 @@ Implemented today:
 - `smoothee history` shows recent Smoothee-managed operations, their outcome,
   before/after HEADs, restore-point availability, undoability, and interrupted
   operations that may need recovery.
+- `smoothee recover <operation-id>` restores the current branch to a selected
+  Smoothee restore point. It requires a clean tree, refuses active merge/rebase
+  state, verifies the restore ref still exists, previews the reset, and creates
+  a fresh restore point first so the recovery can itself be undone.
 - `smoothee pr` analyses the current branch against its base, summarizes commits
   and diff stats, proposes a title/body, verifies GitHub CLI auth, and previews
   the exact push/PR commands before creating anything. Publishing a branch is
@@ -82,7 +87,7 @@ Implemented today:
 
 Still on the roadmap:
 
-- crash/incomplete-operation recovery and AI-assisted explanations.
+- automatic interrupted-operation guidance and AI-assisted explanations.
 
 See [`PROJECT_SUMMARY.md`](PROJECT_SUMMARY.md) for the full design and phased
 roadmap.
@@ -101,13 +106,15 @@ roadmap.
 - Intentional commit workflow with staged-selection preservation, logical change
   groups, conservative message suggestions, dry runs, and explicit approval
 - Human-readable Smoothee operation history with restore and interruption state
+- Explicit recovery to historical Smoothee restore points, with a safety restore
+  point created before recovery so the recovery is reversible
 - Guarded GitHub pull-request creation with branch/base analysis, generated
   summary text, explicit publishing, draft support, dry runs, and approval
 - Reversible operation history through `smoothee undo`
 - Read-only diagnostics through `smoothee doctor`
 - Per-repository configuration via `.smoothee.toml`
 - An append-only operation journal (JSON lines under `.git/smoothee/`) that
-  powers history, undo, and future crash recovery
+  powers history, undo, and recovery
 
 ## Brand assets
 
@@ -126,6 +133,7 @@ cargo build              # debug build → target/debug/smoothee
 cargo build --release    # optimized single executable
 cargo run -- status      # build and run the status command
 cargo run -- history
+cargo run -- recover <operation-id> --dry-run
 cargo run -- commit --dry-run
 cargo run -- pr --dry-run
 cargo run -- doctor      # inspect your Git/GitHub/Smoothee setup

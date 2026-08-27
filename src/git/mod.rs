@@ -6,6 +6,7 @@
 
 pub mod branches;
 pub mod command;
+pub mod commit;
 pub mod conflicts;
 pub mod repository;
 pub mod restore;

@@ -15,8 +15,8 @@ while IFS= read -r -d '' file; do
     END{print count+0}
   ' "$file")
 
-  if (( lines > hard_limit )); then
-    printf 'error: %s has %d substantive production lines (hard limit %d)\n' \
+  if (( lines >= hard_limit )); then
+    printf 'error: %s has %d substantive production lines (hard limit: below %d)\n' \
       "$file" "$lines" "$hard_limit" >&2
     failed=1
   elif (( lines > target )); then
@@ -28,11 +28,11 @@ done < <(find src -type f -name '*.rs' -print0 | sort -z)
 if (( failed )); then
   cat >&2 <<'EOF'
 
-Production modules over 600 lines must be split by responsibility before merging.
+Production modules at 600 lines or more must be split by responsibility before merging.
 Files over 400 lines should be treated as maintainability pressure and split when
 there is a natural boundary. See ARCHITECTURE.md for the intended structure.
 EOF
   exit 1
 fi
 
-printf 'Source-size guard passed: no production Rust module exceeds %d substantive lines.\n' "$hard_limit"
+printf 'Source-size guard passed: all production Rust modules are below %d substantive lines.\n' "$hard_limit"

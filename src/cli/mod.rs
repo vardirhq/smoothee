@@ -48,7 +48,7 @@ pub enum Command {
     /// Show Smoothee-managed operation history and recovery state.
     History {
         /// Maximum number of recent operations to show.
-        #[arg(short = 'n', long, default_value_t = 10, value_parser = clap::value_parser!(usize).range(1..))]
+        #[arg(short = 'n', long, default_value_t = 10)]
         limit: usize,
     },
     /// Reverse the last Smoothee-managed operation.
@@ -112,7 +112,9 @@ impl Cli {
                 dry_run,
                 yes,
             }),
-            Command::History { limit } => commands::history::run(commands::history::HistoryArgs { limit }),
+            Command::History { limit } => {
+                commands::history::run(commands::history::HistoryArgs { limit })
+            }
             Command::Undo { yes } => commands::undo::run(commands::undo::UndoArgs { yes }),
             Command::Doctor => commands::doctor::run(),
             Command::Pr {

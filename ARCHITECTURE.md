@@ -46,7 +46,9 @@ AI must never own the mutation boundary. AI may eventually suggest explanations,
 
 Large test suites are welcome. Large production modules are not.
 
-CI enforces a soft architectural ceiling of 350 production lines per Rust source file, counting only the portion before an inline `#[cfg(test)]` module. When a module approaches the ceiling, split by responsibility rather than by arbitrary line ranges.
+Aim to keep Rust production modules at **400 substantive lines or fewer**. Passing 400 lines is a maintainability warning, not an automatic reason to split a coherent module. Look for a natural responsibility boundary rather than slicing files mechanically.
+
+**600 substantive production lines is the hard limit.** CI fails when a Rust source file exceeds it. The source-size check counts the production portion before an inline `#[cfg(test)]` module and ignores blank lines, so thorough colocated tests do not create artificial pressure to split runtime code.
 
 Good splits are things such as:
 
@@ -55,7 +57,7 @@ Good splits are things such as:
 - workflow state vs terminal presentation;
 - journal storage vs recovery policy.
 
-A file exceeding the ceiling is a design signal, not an invitation to increase the number.
+A file approaching 600 lines is a design problem to solve, not an invitation to increase the limit.
 
 ## Testing expectations
 

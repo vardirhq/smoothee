@@ -29,17 +29,26 @@ pub fn run(args: PrArgs) -> Result<()> {
         .context("could not detect a base branch; configure base_branch in .smoothee.toml")?;
 
     if branch == base.name {
-        anyhow::bail!("current branch `{branch}` is the base branch; create a feature branch first");
+        anyhow::bail!(
+            "current branch `{branch}` is the base branch; create a feature branch first"
+        );
     }
 
     let (ahead, behind) = divergence_from_base(&repo, &branch, &base.name)?
         .context("current branch and base do not share history")?;
     if ahead == 0 {
-        anyhow::bail!("`{branch}` has no commits that are not already in `{}`", base.name);
+        anyhow::bail!(
+            "`{branch}` has no commits that are not already in `{}`",
+            base.name
+        );
     }
 
     let remote_ref = format!("refs/remotes/origin/{branch}");
-    let remote_head = repo.git("rev-parse").arg("--verify").arg(&remote_ref).run()?;
+    let remote_head = repo
+        .git("rev-parse")
+        .arg("--verify")
+        .arg(&remote_ref)
+        .run()?;
     let local_head = repo.head()?;
     let published = remote_head.success;
     let remote_matches = published && remote_head.stdout == local_head;
@@ -49,9 +58,15 @@ pub fn run(args: PrArgs) -> Result<()> {
     if !remote_matches && !args.push {
         println!();
         if published {
-            println!("{}", output::warn("The remote branch is behind your local HEAD."));
+            println!(
+                "{}",
+                output::warn("The remote branch is behind your local HEAD.")
+            );
         } else {
-            println!("{}", output::warn("This branch has not been published to origin yet."));
+            println!(
+                "{}",
+                output::warn("This branch has not been published to origin yet.")
+            );
         }
         println!(
             "  {}",
@@ -69,12 +84,8 @@ pub fn run(args: PrArgs) -> Result<()> {
         .clone()
         .unwrap_or_else(|| suggested_body(&repo, &base.name).unwrap_or_default());
 
-    let push_command = (!remote_matches).then(|| {
-        repo.git("push")
-            .arg("-u")
-            .arg("origin")
-            .arg(&branch)
-    });
+    let push_command =
+        (!remote_matches).then(|| repo.git("push").arg("-u").arg("origin").arg(&branch));
     let mut pr_command = GhCommand::new("pr")
         .arg("create")
         .arg("--base")
@@ -106,7 +117,10 @@ pub fn run(args: PrArgs) -> Result<()> {
 
     if args.dry_run {
         println!();
-        println!("  {}", output::label("Dry run: nothing pushed and no pull request created."));
+        println!(
+            "  {}",
+            output::label("Dry run: nothing pushed and no pull request created.")
+        );
         return Ok(());
     }
 
@@ -145,13 +159,25 @@ pub fn run(args: PrArgs) -> Result<()> {
     Ok(())
 }
 
-fn print_summary(repo: &Repository, branch: &str, base: &str, ahead: u32, behind: u32) -> Result<()> {
+fn print_summary(
+    repo: &Repository,
+    branch: &str,
+    base: &str,
+    ahead: u32,
+    behind: u32,
+) -> Result<()> {
     println!("{}", output::label("Pull request analysis:"));
     println!("{}", output::bullet(&format!("Branch: {branch}")));
     println!("{}", output::bullet(&format!("Base: {base}")));
-    println!("{}", output::bullet(&format!("{ahead} branch-only commit(s)")));
+    println!(
+        "{}",
+        output::bullet(&format!("{ahead} branch-only commit(s)"))
+    );
     if behind > 0 {
-        println!("{}", output::bullet(&output::warn(&format!("{behind} commit(s) behind {base}"))));
+        println!(
+            "{}",
+            output::bullet(&output::warn(&format!("{behind} commit(s) behind {base}")))
+        );
     }
 
     let range = format!("{base}..{branch}");
@@ -182,18 +208,12 @@ fn print_summary(repo: &Repository, branch: &str, base: &str, ahead: u32, behind
 
 fn suggested_title(repo: &Repository, base: &str) -> Result<String> {
     let range = format!("{base}..HEAD");
-    let subjects = repo
-        .git("log")
-        .arg("--format=%s")
-        .arg(&range)
-        .output()?;
-    let mut lines = subjects.lines();
-    let first = lines.next().unwrap_or("Update project");
-    if lines.next().is_none() {
-        Ok(first.to_string())
-    } else {
-        Ok(first.to_string())
-    }
+    let subjects = repo.git("log").arg("--format=%s").arg(&range).output()?;
+    Ok(subjects
+        .lines()
+        .next()
+        .unwrap_or("Update project")
+        .to_string())
 }
 
 fn suggested_body(repo: &Repository, base: &str) -> Result<String> {

@@ -65,13 +65,33 @@ impl Cli {
     pub fn run(self) -> Result<()> {
         match self.command {
             Command::Status => commands::status::run(),
-            Command::Sync { rebase, merge, dry_run, no_verify, yes } => {
-                commands::sync::run(commands::sync::SyncArgs { rebase, merge, dry_run, no_verify, yes })
-            }
+            Command::Sync {
+                rebase,
+                merge,
+                dry_run,
+                no_verify,
+                yes,
+            } => commands::sync::run(commands::sync::SyncArgs {
+                rebase,
+                merge,
+                dry_run,
+                no_verify,
+                yes,
+            }),
             Command::Resolve => commands::resolve::run(),
-            Command::Commit { message, all, group, dry_run, yes } => {
-                commands::commit::run(commands::commit::CommitArgs { message, all, group, dry_run, yes })
-            }
+            Command::Commit {
+                message,
+                all,
+                group,
+                dry_run,
+                yes,
+            } => commands::commit::run(commands::commit::CommitArgs {
+                message,
+                all,
+                group,
+                dry_run,
+                yes,
+            }),
             Command::Undo { yes } => commands::undo::run(commands::undo::UndoArgs { yes }),
             Command::Doctor => commands::doctor::run(),
             Command::Pr => commands::not_yet_implemented("pr", "Phase 4: GitHub workflow"),

@@ -6,6 +6,7 @@
 mod cli;
 mod config;
 mod git;
+mod github;
 mod operations;
 mod ui;
 mod verification;
@@ -23,8 +24,6 @@ fn main() -> ExitCode {
     match cli.run() {
         Ok(()) => ExitCode::SUCCESS,
         Err(err) => {
-            // Clarity in failure states: lead with the problem, then the chain
-            // of causes, each on its own line. No stack traces, no panics.
             eprintln!("{}", output::warn(&err.to_string()));
             for cause in err.chain().skip(1) {
                 eprintln!("  {}", output::label(&format!("caused by: {cause}")));

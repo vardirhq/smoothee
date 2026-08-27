@@ -67,6 +67,10 @@ Implemented today:
 - `smoothee commit` respects existing staged changes or groups unstaged work by
   logical scope, shows exactly what it will stage and commit, and refuses to mix
   unrelated-looking groups unless asked explicitly.
+- `smoothee pr` analyses the current branch against its base, summarizes commits
+  and diff stats, proposes a title/body, verifies GitHub CLI auth, and previews
+  the exact push/PR commands before creating anything. Publishing a branch is
+  explicit through `--push`.
 - `smoothee undo` reverses the latest Smoothee-managed operation when a restore
   point is available.
 - `smoothee doctor` checks Git, GitHub CLI, repository, base-branch detection,
@@ -74,7 +78,6 @@ Implemented today:
 
 Still on the roadmap:
 
-- `smoothee pr` for the GitHub pull-request workflow.
 - richer history inspection and AI-assisted explanations.
 
 See [`PROJECT_SUMMARY.md`](PROJECT_SUMMARY.md) for the full design and phased
@@ -93,6 +96,8 @@ roadmap.
   markers
 - Intentional commit workflow with staged-selection preservation, logical change
   groups, conservative message suggestions, dry runs, and explicit approval
+- Guarded GitHub pull-request creation with branch/base analysis, generated
+  summary text, explicit publishing, draft support, dry runs, and approval
 - Reversible operation history through `smoothee undo`
 - Read-only diagnostics through `smoothee doctor`
 - Per-repository configuration via `.smoothee.toml`
@@ -108,14 +113,15 @@ roadmap.
 
 ## Building and testing
 
-Smoothee is a single Rust binary. You need a recent stable Rust
-toolchain (1.80+) and a `git` binary on `PATH`.
+Smoothee is a single Rust binary. You need Rust 1.85+ and a `git` binary on
+`PATH`. `smoothee pr` additionally uses the GitHub CLI (`gh`).
 
 ```sh
 cargo build              # debug build → target/debug/smoothee
 cargo build --release    # optimized single executable
 cargo run -- status      # build and run the status command
 cargo run -- commit --dry-run
+cargo run -- pr --dry-run
 cargo run -- doctor      # inspect your Git/GitHub/Smoothee setup
 cargo test               # run the full test suite
 cargo test <name>        # run a single test by name substring

@@ -35,7 +35,7 @@ impl CommitPlan {
         let groups = group_paths(
             changes
                 .iter()
-                .filter(|change| !change.staged)
+                .filter(|change| change.unstaged || change.untracked)
                 .map(|change| change.path.as_str()),
         );
         Ok(Self { changes, groups })
@@ -97,11 +97,9 @@ fn parse_porcelain(raw: &str) -> Vec<Change> {
         let bytes = entry.as_bytes();
         let x = bytes[0] as char;
         let y = bytes[1] as char;
-        let mut path = entry[3..].to_string();
+        let path = entry[3..].to_string();
         if x == 'R' || x == 'C' {
-            if let Some(destination) = entries.next() {
-                path = destination.to_string();
-            }
+            let _ = entries.next();
         }
         changes.push(Change {
             path,
@@ -145,7 +143,9 @@ mod tests {
 
     #[test]
     fn groups_unstaged_paths_by_top_level_scope() {
-        let groups = group_paths(["src/a.rs", "src/b.rs", "docs/guide.md", "README.md"].into_iter());
+        let groups = group_paths(
+            ["src/a.rs", "src/b.rs", "docs/guide.md", "README.md"].into_iter(),
+        );
         assert_eq!(groups.len(), 3);
         assert_eq!(groups[0].scope, "docs");
         assert_eq!(groups[1].scope, "root");
@@ -154,7 +154,10 @@ mod tests {
 
     #[test]
     fn suggestion_uses_selected_scope() {
-        let group = ChangeGroup { scope: "src".into(), paths: vec!["src/a.rs".into()] };
+        let group = ChangeGroup {
+            scope: "src".into(),
+            paths: vec!["src/a.rs".into()],
+        };
         assert_eq!(suggested_message(Some(&group), &[]), "Update src");
     }
 }

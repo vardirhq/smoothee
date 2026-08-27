@@ -51,6 +51,17 @@ pub enum Command {
         #[arg(short = 'n', long, default_value_t = 10)]
         limit: usize,
     },
+    /// Recover the current branch to a selected Smoothee restore point.
+    Recover {
+        /// Full operation id, or an unambiguous prefix from `smoothee history`.
+        operation: String,
+        /// Show the recovery plan without changing the repository.
+        #[arg(long)]
+        dry_run: bool,
+        /// Proceed without the confirmation prompt.
+        #[arg(short = 'y', long)]
+        yes: bool,
+    },
     /// Reverse the last Smoothee-managed operation.
     Undo {
         #[arg(short = 'y', long)]
@@ -115,6 +126,15 @@ impl Cli {
             Command::History { limit } => {
                 commands::history::run(commands::history::HistoryArgs { limit })
             }
+            Command::Recover {
+                operation,
+                dry_run,
+                yes,
+            } => commands::recover::run(commands::recover::RecoverArgs {
+                operation,
+                dry_run,
+                yes,
+            }),
             Command::Undo { yes } => commands::undo::run(commands::undo::UndoArgs { yes }),
             Command::Doctor => commands::doctor::run(),
             Command::Pr {

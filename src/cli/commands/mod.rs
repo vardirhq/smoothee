@@ -2,6 +2,7 @@
 
 pub mod commit;
 pub mod doctor;
+pub mod explain;
 pub mod history;
 pub mod pr;
 pub mod resolve;

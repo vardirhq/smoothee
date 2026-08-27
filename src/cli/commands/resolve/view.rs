@@ -160,7 +160,11 @@ fn finish_hint(context: ConflictContext) -> &'static str {
 }
 
 fn plural(n: usize) -> &'static str {
-    if n == 1 { "" } else { "s" }
+    if n == 1 {
+        ""
+    } else {
+        "s"
+    }
 }
 
 #[cfg(test)]
@@ -178,7 +182,10 @@ mod tests {
 
     #[test]
     fn finish_hint_matches_context() {
-        assert_eq!(finish_hint(ConflictContext::Rebase), "git rebase --continue");
+        assert_eq!(
+            finish_hint(ConflictContext::Rebase),
+            "git rebase --continue"
+        );
         assert_eq!(finish_hint(ConflictContext::Merge), "git commit --no-edit");
     }
 

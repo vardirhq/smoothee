@@ -110,7 +110,9 @@ fn print_repository() {
         ),
         Ok(None) => println!(
             "{}",
-            output::bullet(&output::warn("detached HEAD; sync/pr workflows need a branch"))
+            output::bullet(&output::warn(
+                "detached HEAD; sync/pr workflows need a branch"
+            ))
         ),
         Err(err) => println!(
             "{}",
@@ -136,7 +138,9 @@ fn print_repository() {
             ),
             Err(err) => println!(
                 "{}",
-                output::bullet(&output::warn(&format!("could not detect base branch: {err}")))
+                output::bullet(&output::warn(&format!(
+                    "could not detect base branch: {err}"
+                )))
             ),
         },
         Err(err) => println!(
@@ -228,7 +232,10 @@ fn print_configuration() {
 }
 
 fn command_version(command: &str, args: &[&str]) -> Option<String> {
-    let output = std::process::Command::new(command).args(args).output().ok()?;
+    let output = std::process::Command::new(command)
+        .args(args)
+        .output()
+        .ok()?;
     if !output.status.success() {
         return None;
     }

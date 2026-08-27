@@ -1,10 +1,6 @@
 //! Subcommand implementations.
-//!
-//! Phase 1 shipped `status`; Phase 2 adds the mutating `sync`, `resolve`, and
-//! `undo`; `doctor` keeps the local environment inspectable. Remaining commands
-//! are declared in the CLI surface so `--help` reflects the real product shape,
-//! and each reports its roadmap phase rather than pretending to work.
 
+pub mod commit;
 pub mod doctor;
 pub mod resolve;
 pub mod status;
@@ -15,10 +11,6 @@ use anyhow::Result;
 
 use crate::ui::output;
 
-/// Placeholder for a command that is on the roadmap but not yet implemented.
-///
-/// Honesty over theatrics: tell the user plainly that the command is planned,
-/// and which phase delivers it, rather than failing cryptically.
 pub fn not_yet_implemented(command: &str, phase: &str) -> Result<()> {
     println!(
         "{}",
@@ -30,7 +22,7 @@ pub fn not_yet_implemented(command: &str, phase: &str) -> Result<()> {
     println!(
         "  {}",
         output::label(
-            "Today, `smoothee status`, `sync`, `resolve`, `undo`, and `doctor` are available."
+            "Today, `smoothee status`, `sync`, `resolve`, `commit`, `undo`, and `doctor` are available."
         )
     );
     Ok(())

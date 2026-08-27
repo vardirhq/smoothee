@@ -63,18 +63,14 @@ impl WorkingTreeStatus {
             if let Some(header) = line.strip_prefix("# ") {
                 status.parse_header(header);
             } else if let Some(rest) = line.strip_prefix("1 ") {
-                // Ordinary changed entry: "<XY> <sub> ... <path>".
                 status.tally_xy(rest);
             } else if let Some(rest) = line.strip_prefix("2 ") {
-                // Renamed/copied entry: same leading XY field.
                 status.tally_xy(rest);
             } else if line.starts_with("u ") {
-                // Unmerged entry — always a conflict.
                 status.conflicted += 1;
             } else if line.starts_with("? ") {
                 status.untracked += 1;
             }
-            // "! " ignored entries are intentionally not surfaced.
         }
 
         status
@@ -96,7 +92,6 @@ impl WorkingTreeStatus {
                 self.upstream = fields.next().map(str::to_string);
             }
             Some("branch.ab") => {
-                // Format: "+<ahead> -<behind>".
                 let ahead = fields
                     .next()
                     .and_then(|f| f.strip_prefix('+'))
@@ -116,8 +111,6 @@ impl WorkingTreeStatus {
         }
     }
 
-    /// Given the remainder of a "1"/"2" line, whose first field is the two-
-    /// character `<XY>` staged/worktree status code, tally staged vs modified.
     fn tally_xy(&mut self, rest: &str) {
         let Some(xy) = rest.split_whitespace().next() else {
             return;

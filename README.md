@@ -27,6 +27,7 @@ Instead of memorizing recovery commands:
     smoothee sync
     smoothee resolve
     smoothee commit
+    smoothee history
     smoothee undo
     smoothee doctor
     smoothee pr
@@ -67,6 +68,9 @@ Implemented today:
 - `smoothee commit` respects existing staged changes or groups unstaged work by
   logical scope, shows exactly what it will stage and commit, and refuses to mix
   unrelated-looking groups unless asked explicitly.
+- `smoothee history` shows recent Smoothee-managed operations, their outcome,
+  before/after HEADs, restore-point availability, undoability, and interrupted
+  operations that may need recovery.
 - `smoothee pr` analyses the current branch against its base, summarizes commits
   and diff stats, proposes a title/body, verifies GitHub CLI auth, and previews
   the exact push/PR commands before creating anything. Publishing a branch is
@@ -78,7 +82,7 @@ Implemented today:
 
 Still on the roadmap:
 
-- richer history inspection and AI-assisted explanations.
+- crash/incomplete-operation recovery and AI-assisted explanations.
 
 See [`PROJECT_SUMMARY.md`](PROJECT_SUMMARY.md) for the full design and phased
 roadmap.
@@ -96,13 +100,14 @@ roadmap.
   markers
 - Intentional commit workflow with staged-selection preservation, logical change
   groups, conservative message suggestions, dry runs, and explicit approval
+- Human-readable Smoothee operation history with restore and interruption state
 - Guarded GitHub pull-request creation with branch/base analysis, generated
   summary text, explicit publishing, draft support, dry runs, and approval
 - Reversible operation history through `smoothee undo`
 - Read-only diagnostics through `smoothee doctor`
 - Per-repository configuration via `.smoothee.toml`
 - An append-only operation journal (JSON lines under `.git/smoothee/`) that
-  powers undo and future crash recovery
+  powers history, undo, and future crash recovery
 
 ## Brand assets
 
@@ -120,6 +125,7 @@ Smoothee is a single Rust binary. You need Rust 1.85+ and a `git` binary on
 cargo build              # debug build → target/debug/smoothee
 cargo build --release    # optimized single executable
 cargo run -- status      # build and run the status command
+cargo run -- history
 cargo run -- commit --dry-run
 cargo run -- pr --dry-run
 cargo run -- doctor      # inspect your Git/GitHub/Smoothee setup

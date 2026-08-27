@@ -17,6 +17,8 @@ pub struct Cli {
 pub enum Command {
     /// Explain repository state in plain language.
     Status,
+    /// Explain why the current repository state matters and what to do next.
+    Explain,
     /// Safely update the current branch (fetch, restore point, merge/rebase).
     Sync {
         #[arg(long, conflicts_with = "merge")]
@@ -85,6 +87,7 @@ impl Cli {
     pub fn run(self) -> Result<()> {
         match self.command {
             Command::Status => commands::status::run(),
+            Command::Explain => commands::explain::run(),
             Command::Sync {
                 rebase,
                 merge,

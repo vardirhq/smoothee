@@ -148,7 +148,11 @@ fn explain(assessment: &StatusAssessment) -> Vec<String> {
 }
 
 fn plural(value: u32) -> &'static str {
-    if value == 1 { "" } else { "s" }
+    if value == 1 {
+        ""
+    } else {
+        "s"
+    }
 }
 
 #[cfg(test)]

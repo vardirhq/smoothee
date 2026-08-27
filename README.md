@@ -26,6 +26,7 @@ Instead of memorizing recovery commands:
     smoothee status
     smoothee sync
     smoothee resolve
+    smoothee commit
     smoothee undo
     smoothee doctor
     smoothee pr
@@ -63,6 +64,9 @@ Implemented today:
   a restore point, journals the operation, and stops safely on conflicts.
 - `smoothee resolve` walks through in-progress merge/rebase conflicts and
   validates edited files before staging them.
+- `smoothee commit` respects existing staged changes or groups unstaged work by
+  logical scope, shows exactly what it will stage and commit, and refuses to mix
+  unrelated-looking groups unless asked explicitly.
 - `smoothee undo` reverses the latest Smoothee-managed operation when a restore
   point is available.
 - `smoothee doctor` checks Git, GitHub CLI, repository, base-branch detection,
@@ -71,7 +75,7 @@ Implemented today:
 Still on the roadmap:
 
 - `smoothee pr` for the GitHub pull-request workflow.
-- richer commit workflow, history inspection, and AI-assisted explanations.
+- richer history inspection and AI-assisted explanations.
 
 See [`PROJECT_SUMMARY.md`](PROJECT_SUMMARY.md) for the full design and phased
 roadmap.
@@ -87,6 +91,8 @@ roadmap.
   journaling, and conflict-aware stopping
 - Guided conflict resolution that refuses to stage files with leftover conflict
   markers
+- Intentional commit workflow with staged-selection preservation, logical change
+  groups, conservative message suggestions, dry runs, and explicit approval
 - Reversible operation history through `smoothee undo`
 - Read-only diagnostics through `smoothee doctor`
 - Per-repository configuration via `.smoothee.toml`
@@ -109,6 +115,7 @@ toolchain (1.80+) and a `git` binary on `PATH`.
 cargo build              # debug build → target/debug/smoothee
 cargo build --release    # optimized single executable
 cargo run -- status      # build and run the status command
+cargo run -- commit --dry-run
 cargo run -- doctor      # inspect your Git/GitHub/Smoothee setup
 cargo test               # run the full test suite
 cargo test <name>        # run a single test by name substring

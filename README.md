@@ -24,6 +24,7 @@ Instead of memorizing recovery commands:
 ```
 
     smoothee status
+    smoothee explain
     smoothee sync
     smoothee resolve
     smoothee commit
@@ -61,6 +62,9 @@ Recommended next step:
 Implemented today:
 
 - `smoothee status` explains repository state and recommends one next step.
+- `smoothee explain` goes deeper on the same deterministic assessment: why the
+  current state matters, what risks it creates, what Smoothee safety net is
+  available, and the safest next action.
 - `smoothee sync` fetches the base branch, shows a merge/rebase plan, creates
   a restore point, journals the operation, and stops safely on conflicts.
 - `smoothee resolve` walks through in-progress merge/rebase conflicts and
@@ -82,7 +86,7 @@ Implemented today:
 
 Still on the roadmap:
 
-- crash/incomplete-operation recovery and AI-assisted explanations.
+- richer recovery workflows and optional AI-assisted explanations.
 
 See [`PROJECT_SUMMARY.md`](PROJECT_SUMMARY.md) for the full design and phased
 roadmap.
@@ -94,6 +98,8 @@ roadmap.
   the real commands inspectable
 - Plain-language `status`: working-tree summary, base-branch detection,
   ahead/behind analysis, and a single recommended next step
+- Deterministic repository explanations for divergence, conflicts, dirty state,
+  detached HEAD, missing upstreams, and available Smoothee safety mechanisms
 - Safe synchronization with explicit plans, restore points, operation
   journaling, and conflict-aware stopping
 - Guided conflict resolution that refuses to stage files with leftover conflict
@@ -125,6 +131,7 @@ Smoothee is a single Rust binary. You need Rust 1.85+ and a `git` binary on
 cargo build              # debug build → target/debug/smoothee
 cargo build --release    # optimized single executable
 cargo run -- status      # build and run the status command
+cargo run -- explain
 cargo run -- history
 cargo run -- commit --dry-run
 cargo run -- pr --dry-run
